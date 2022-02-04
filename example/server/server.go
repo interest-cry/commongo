@@ -85,7 +85,7 @@ func (s *Server) StartTask(c *gin.Context) {
 		network.DeLog.Infof(network.INFOPREFIX+"SaveData BindJson error:%v\n", err)
 		return
 	}
-	msgHandle, err := network.NewMessager(network.HTTPCACHE,
+	msgHandle, err := network.NewMessager(network.HTTPCONN,
 		network.BigCache(s.HBigC),
 		network.SendUrl(req.SendUrl))
 	if err != nil {

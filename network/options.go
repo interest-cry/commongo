@@ -9,6 +9,8 @@ type Options struct {
 	//httpcache
 	HttpBigC *HttpBigCache
 	SendUrl  string
+	//EventBus
+	EventB *EventBus
 }
 
 func newOptions(opts ...Option) *Options {
@@ -19,6 +21,7 @@ func newOptions(opts ...Option) *Options {
 		TimeOut:        3600,
 		ClientOrServer: CLIENT,
 		HttpBigC:       DefaultHttpBigCache,
+		EventB:         DefaultEventBus,
 	}
 	for _, o := range opts {
 		o(&opt)

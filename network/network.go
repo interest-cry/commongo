@@ -9,9 +9,10 @@ type Messager interface {
 type Option func(o *Options)
 
 const (
-	TCP       = "TCP"
-	HTTP      = "HTTP"
-	HTTPCACHE = "HTTPCACHE"
+	TCPCONN  = "TCPCONN"
+	HTTP     = "HTTP"
+	HTTPCONN = "HTTPCONN"
+	CHANCONN = "CHANCONN"
 )
 
 func NewMessager(netWorkType string, opts ...Option) (Messager, error) {
@@ -19,11 +20,15 @@ func NewMessager(netWorkType string, opts ...Option) (Messager, error) {
 	switch netWorkType {
 	case HTTP:
 		break
-	case HTTPCACHE:
+	case HTTPCONN:
 		return newHttpConn(opts...)
-		break
+
+	case TCPCONN:
+		return newTcpConn(opts...)
+
+	case CHANCONN:
+		return newChanConn(opts...)
 	default:
-		//TCP
 		return newTcpConn(opts...)
 	}
 	return nil, nil

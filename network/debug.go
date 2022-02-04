@@ -11,6 +11,7 @@ var (
 
 const (
 	INFOPREFIX = "[=== INFO]"
+	WARNPREFIX = "[=== WARN]"
 )
 
 func init() {
