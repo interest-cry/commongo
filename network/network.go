@@ -14,17 +14,17 @@ const (
 	HTTPCACHE = "HTTPCACHE"
 )
 
-func NewMessager(opts ...Option) (Messager, error) {
-	o := newOptions(opts...)
-	switch o.NetWorkType {
+func NewMessager(netWorkType string, opts ...Option) (Messager, error) {
+	//o := newOptions(opts...)
+	switch netWorkType {
 	case HTTP:
 		break
 	case HTTPCACHE:
-		return newHttpConn(o)
+		return newHttpConn(opts...)
 		break
 	default:
 		//TCP
-		return newTcpConn(o)
+		return newTcpConn(opts...)
 	}
 	return nil, nil
 }

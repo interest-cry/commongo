@@ -1,13 +1,35 @@
 package network
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"sync"
 	"testing"
 	"time"
 )
+
+/***
+go test -v -run TestIp
+go test -v -test.run=TestIp
+go test -v ./*.go
+go test -v ./*.go -test.run=.
+go test -v ./*.go -test.bench=.
+go test -v options_test.go -test.run TestIp
+***/
+/**
+会出现未定义的情况, 这是因为定义在其他文件里, 需要加上定义的文件.
+go test -v options.go options_test.go
+go test -v ./*.go -test.run=. 全测
+go test -v ./*.go -test.run=TestTcpConn_NewTcpConn
+**/
+//go test -v hello.go hello_test.go
+//go test -v  -test.run="TestA*";加前缀
+/***
+测试覆盖率
+go test -v -cover
+go test -v -coverprofile=a.out -test.run="TestA*" # 把测试结果保存在 a.out
+go tool cover -html=./a.out  # 通过浏览器打开, 可以看到覆盖经过的函数
+ ****/
 
 /*
 benchmark测试
@@ -19,16 +41,56 @@ go test -v -bench=BenchmarkIp -benchmem -run=^$ -cpu 1,2,4,8
 go test -v -test.bench=BenchmarkIp -benchmem -run=^$
 */
 
+func TestTcpConn_Ip(t *testing.T) {
+	ip := "192.168.1.6"
+	o := newOptions(Ip(ip))
+	assert.True(t, o != nil, "o==nil")
+	assert.Equal(t, ip, o.Ip)
+}
+
+func TestTcpConn_Port(t *testing.T) {
+	port := 3000
+	o := newOptions(Port(port))
+	assert.True(t, o != nil, "o==nil")
+	assert.Equal(t, port, o.Port)
+}
+
+//func TestNetWorkType(t *testing.T) {
+//	netTypes := []string{TCP, HTTP, HTTPCACHE}
+//	for i, v := range netTypes {
+//		assert.Equal(t, netTypes[i], v)
+//		o := newOptions(NetWorkType(v))
+//		assert.Equal(t, v, o.NetWorkType)
+//	}
+//}
+
+func TestTcpConn_ClientOrServer(t *testing.T) {
+	cs := []string{CLIENT, SERVER}
+	o := newOptions()
+	assert.Equal(t, o.ClientOrServer, CLIENT)
+	for i, v := range cs {
+		assert.Equal(t, cs[i], v)
+		o := newOptions(ClientOrServer(v))
+		assert.Equal(t, v, o.ClientOrServer)
+	}
+}
+func BenchmarkTcpConn_Ip(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Ip("127.0.0.1")
+	}
+}
+
 func TestTcpConn_NewTcpConnServer(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	//Sever
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
-		fmt.Printf("***server,con:%+v\n", con)
+		DeLog.Infof(INFOPREFIX+"server,con:%+v\n", con)
 		err = con.Close()
 		assert.NoError(t, err)
 	}()
@@ -37,10 +99,10 @@ func TestTcpConn_NewTcpConnServer(t *testing.T) {
 	//Client
 	go func() {
 		defer wg.Done()
-		o := newOptions()
-		con, err := newTcpConn(o)
+		//o := newOptions()
+		con, err := newTcpConn()
 		assert.NoError(t, err)
-		fmt.Printf("***client,con:%+v\n", con)
+		DeLog.Infof(INFOPREFIX+"client,con:%+v\n", con)
 		err = con.Close()
 		assert.NoError(t, err)
 	}()
@@ -52,10 +114,10 @@ func TestTcpConn_NewTcpConnClient(t *testing.T) {
 	//Client
 	go func() {
 		defer wg.Done()
-		o := newOptions()
-		con, err := newTcpConn(o)
+		//o := newOptions()
+		con, err := newTcpConn()
 		assert.NoError(t, err)
-		fmt.Printf("***client,con:%+v\n", con)
+		DeLog.Infof(INFOPREFIX+"client,con:%+v\n", con)
 		err = con.Close()
 		assert.NoError(t, err)
 	}()
@@ -64,57 +126,57 @@ func TestTcpConn_NewTcpConnClient(t *testing.T) {
 	time.Sleep(3 * time.Second)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
-		fmt.Printf("***server,con:%+v\n", con)
+		DeLog.Infof(INFOPREFIX+"server,con:%+v\n", con)
 		err = con.Close()
 		assert.NoError(t, err)
 	}()
 	wg.Wait()
 }
 func TestTcpConn_TimeOutServer(t *testing.T) {
-	o := newOptions(ClientOrServer(SERVER), TimeOut(3))
-	con, err := newTcpConn(o)
+	//o := newOptions(ClientOrServer(SERVER), TimeOut(3))
+	con, err := newTcpConn(ClientOrServer(SERVER), TimeOut(3))
 	assert.Error(t, err, "error ret:%v", err)
-	fmt.Printf("***server,con:%+v\n", con)
+	DeLog.Infof(INFOPREFIX+"server,con:%+v\n", con)
 }
 func TestTcpConn_TimeOutClient(t *testing.T) {
-	o := newOptions(ClientOrServer(CLIENT), TimeOut(3))
-	con, err := newTcpConn(o)
+	//o := newOptions(ClientOrServer(CLIENT), TimeOut(3))
+	con, err := newTcpConn(ClientOrServer(CLIENT), TimeOut(3))
 	assert.Error(t, err, "error ret:%v", err)
-	fmt.Printf("***client,con:%+v\n", con)
+	DeLog.Infof(INFOPREFIX+"client,con:%+v\n", con)
 }
 func TestTcpConn_Close(t *testing.T) {
 	go func() {
-		o := newOptions(ClientOrServer(CLIENT))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(CLIENT))
+		con, err := newTcpConn(ClientOrServer(CLIENT))
 		assert.NoError(t, err)
-		fmt.Printf("***client,con:%+v\n", con)
+		DeLog.Infof(INFOPREFIX+"client,con:%+v\n", con)
 		err = con.Close()
 		assert.NoError(t, err)
 	}()
 	time.Sleep(time.Second)
-	o := newOptions(ClientOrServer(SERVER))
-	con, err := newTcpConn(o)
+	//o := newOptions(ClientOrServer(SERVER))
+	con, err := newTcpConn(ClientOrServer(SERVER))
 	assert.NoError(t, err)
-	fmt.Printf("***server,con:%+v\n", con)
+	DeLog.Infof(INFOPREFIX+"server,con:%+v\n", con)
 	err = con.Close()
 	assert.NoError(t, err)
 	time.Sleep(2 * time.Second)
 	go func() {
 		time.Sleep(time.Second)
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
-		fmt.Printf("***server,con:%+v\n", con)
+		DeLog.Infof(INFOPREFIX+"server,con:%+v\n", con)
 		err = con.Close()
 		assert.NoError(t, err)
 	}()
-	o1 := newOptions(ClientOrServer(CLIENT))
-	con1, err1 := newTcpConn(o1)
+	//o1 := newOptions(ClientOrServer(CLIENT))
+	con1, err1 := newTcpConn(ClientOrServer(CLIENT))
 	assert.NoError(t, err1)
-	fmt.Printf("***client,con:%+v\n", con1)
+	DeLog.Infof(INFOPREFIX+"client,con:%+v\n", con)
 	err1 = con1.Close()
 	assert.NoError(t, err1)
 }
@@ -142,11 +204,11 @@ func TestTcpConn_ClientRecvData(t *testing.T) {
 	wg.Add(1)
 	test_num := 10000
 	srcData, offList := genRandData(111, test_num, 4096)
-	fmt.Printf("offList:%+v\n", offList[:100])
+	DeLog.Infof(INFOPREFIX+"offList:%+v\n", offList[:100])
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
 		defer func() {
 			err := con.Close()
@@ -162,8 +224,8 @@ func TestTcpConn_ClientRecvData(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(CLIENT))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(CLIENT))
+		con, err := newTcpConn(ClientOrServer(CLIENT))
 		assert.NoError(t, err)
 		defer func() {
 			err := con.Close()
@@ -186,11 +248,11 @@ func TestTcpConn_ClientSendData(t *testing.T) {
 	wg.Add(1)
 	test_num := 10000
 	srcData, offList := genRandData(111, test_num, 4096)
-	fmt.Printf("offList:%+v\n", offList[:100])
+	DeLog.Infof(INFOPREFIX+"offList:%+v\n", offList[:100])
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(CLIENT))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(CLIENT))
+		con, err := newTcpConn(ClientOrServer(CLIENT))
 		assert.NoError(t, err)
 		defer func() {
 			err := con.Close()
@@ -206,8 +268,8 @@ func TestTcpConn_ClientSendData(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
 		defer func() {
 			err := con.Close()
@@ -230,8 +292,8 @@ func TestTcpConn_RecvDataExitServer(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(CLIENT))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(CLIENT))
+		con, err := newTcpConn(ClientOrServer(CLIENT))
 		assert.NoError(t, err)
 		tick := time.NewTicker(5 * time.Second)
 		defer func() {
@@ -244,17 +306,17 @@ func TestTcpConn_RecvDataExitServer(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
 		defer func() {
 			err := con.Close()
 			assert.NoError(t, err)
 		}()
-		fmt.Printf("***server: RecvData start\n")
+		DeLog.Infof(INFOPREFIX + "server: RecvData start\n")
 		dataR, err := con.RecvData("")
 		//assert.NoError(t, err, "***err:%+v", err)
-		fmt.Printf("***server: RecvData exit,dataR:%+v,err:%+v\n", dataR, err)
+		DeLog.Infof(INFOPREFIX+"server: RecvData exit,dataR:%+v,err:%+v\n", dataR, err)
 	}()
 	wg.Wait()
 }
@@ -264,8 +326,8 @@ func TestTcpConn_RecvDataExitClient(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(SERVER))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(SERVER))
+		con, err := newTcpConn(ClientOrServer(SERVER))
 		assert.NoError(t, err)
 		tick := time.NewTicker(5 * time.Second)
 		defer func() {
@@ -278,17 +340,17 @@ func TestTcpConn_RecvDataExitClient(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		o := newOptions(ClientOrServer(CLIENT))
-		con, err := newTcpConn(o)
+		//o := newOptions(ClientOrServer(CLIENT))
+		con, err := newTcpConn(ClientOrServer(CLIENT))
 		assert.NoError(t, err)
 		defer func() {
 			err := con.Close()
 			assert.NoError(t, err)
 		}()
-		fmt.Printf("***client: RecvData start\n")
+		DeLog.Infof(INFOPREFIX + "client: RecvData start\n")
 		dataR, err := con.RecvData("")
 		//assert.NoError(t, err, "***err:%+v", err)
-		fmt.Printf("***client: RecvData exit,dataR:%+v,err:%+v\n", dataR, err)
+		DeLog.Infof(INFOPREFIX+"client: RecvData exit,dataR:%+v,err:%+v\n", dataR, err)
 	}()
 	wg.Wait()
 }

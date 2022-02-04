@@ -3,7 +3,6 @@ package network
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"strconv"
@@ -14,6 +13,23 @@ const (
 	CLIENT = "CLIENT"
 	SERVER = "SERVER"
 )
+
+func Ip(ip string) Option {
+	return func(o *Options) {
+		o.Ip = ip
+	}
+}
+func Port(port int) Option {
+	return func(o *Options) {
+		o.Port = port
+	}
+}
+
+func ClientOrServer(cliOrSer string) Option {
+	return func(o *Options) {
+		o.ClientOrServer = cliOrSer
+	}
+}
 
 type connResult struct {
 	c   net.Conn
@@ -27,8 +43,8 @@ type TcpConn struct {
 	headRecvBuf []byte
 }
 
-func newTcpConn(o *Options) (*TcpConn, error) {
-	//o := newOptions(opts...)
+func newTcpConn(opts ...Option) (*TcpConn, error) {
+	o := newOptions(opts...)
 	//dur := time.Tick(time.Second * time.Duration(o.TimeOut))
 	//可以手动停止任务
 	tick := time.NewTicker(time.Second * time.Duration(o.TimeOut))
@@ -42,9 +58,10 @@ func newTcpConn(o *Options) (*TcpConn, error) {
 			return nil, err
 		}
 		out := make(chan connResult, 1)
+		//保证go routine exit
 		go func() {
 			defer func() {
-				fmt.Printf("listener accept go routine exit ok\n")
+				DeLog.Infof(INFOPREFIX + "listener accept go routine exit ok\n")
 			}()
 			c, err := listener.Accept()
 			out <- connResult{c, err}
@@ -62,10 +79,11 @@ func newTcpConn(o *Options) (*TcpConn, error) {
 		//停止tick
 		tick.Stop()
 		if errRet != nil {
+			//listener 关闭,保证accept退出
 			listener.Close()
 			return nil, errRet
 		}
-		fmt.Printf("server: accept ok,remoteaddr:%v\n", connRet.c.RemoteAddr())
+		DeLog.Infof(INFOPREFIX+"server: accept ok,remoteaddr:%v\n", connRet.c.RemoteAddr())
 		return &TcpConn{
 			o:           o,
 			c:           connRet.c.(*net.TCPConn),
@@ -87,7 +105,7 @@ func newTcpConn(o *Options) (*TcpConn, error) {
 				}
 				//释放资源
 				tick.Stop()
-				fmt.Printf("client: dial ok,remoteaddr:%v\n", c.RemoteAddr())
+				DeLog.Infof(INFOPREFIX+"client: dial ok,remoteaddr:%v\n", c.RemoteAddr())
 				return &TcpConn{
 					o:           o,
 					c:           c.(*net.TCPConn),
