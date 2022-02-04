@@ -105,12 +105,14 @@ func (s *Server) StartTask(c *gin.Context) {
 		srcData, _ := GenRandDataDebug(111, datasetNum, dataSrcLen)
 		for i := 0; i < datasetNum; i++ {
 			key := "key_" + strconv.Itoa(i)
+			srcData = []byte(key)
 			_, err := msgHandle.SendData(key, srcData)
 			if err != nil {
 				network.DeLog.Infof(network.INFOPREFIX+"guest send data error:%v\n", err)
 				c.JSON(200, gin.H{"msg": err.Error()})
 				return
 			}
+			network.DeLog.Infof("SendData,i:%v,key:%v,data:%v", i, key, string(srcData))
 		}
 	case HOST:
 		//ret, err := msgHandle.RecvData("key")
@@ -122,7 +124,8 @@ func (s *Server) StartTask(c *gin.Context) {
 				c.JSON(200, gin.H{"msg": err.Error()})
 				return
 			}
-			network.DeLog.Infof(network.INFOPREFIX+"i:%v,ret len:%v,err:%v\n", i, len(ret), err)
+			//network.DeLog.Infof(network.INFOPREFIX+"i:%v,ret len:%v,err:%v\n", i, len(ret), err)
+			network.DeLog.Infof("RecvData,i:%v,key:%v,data:%v", i, key, string(ret))
 		}
 	}
 	c.JSON(200, gin.H{"msg": "ok"})
