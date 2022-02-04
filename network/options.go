@@ -1,6 +1,8 @@
 package network
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Options struct {
 	NetWorkType    string
@@ -8,6 +10,9 @@ type Options struct {
 	Port           int
 	TimeOut        int
 	ClientOrServer string
+	//httpcache
+	HttpBigC *HttpBigCache
+	SendUrl  string
 }
 
 func newOptions(opts ...Option) *Options {
@@ -17,6 +22,7 @@ func newOptions(opts ...Option) *Options {
 		Port:           18888,
 		TimeOut:        3600,
 		ClientOrServer: CLIENT,
+		HttpBigC:       DefaultHttpBigCache,
 	}
 	for _, o := range opts {
 		o(&opt)
@@ -26,7 +32,7 @@ func newOptions(opts ...Option) *Options {
 	//	//	panic("tcp network must set client or server")
 	//	//}
 	//}
-	fmt.Printf("params options:%+v\n", opt)
+	fmt.Printf("***options:%+v\n", opt)
 	return &opt
 }
 func NetWorkType(netType string) Option {
@@ -52,5 +58,17 @@ func TimeOut(seconds int) Option {
 func ClientOrServer(cliOrSer string) Option {
 	return func(o *Options) {
 		o.ClientOrServer = cliOrSer
+	}
+}
+
+//httpcache
+func BigCache(bigCache *HttpBigCache) Option {
+	return func(o *Options) {
+		o.HttpBigC = bigCache
+	}
+}
+func SendUrl(sendUrl string) Option {
+	return func(o *Options) {
+		o.SendUrl = sendUrl
 	}
 }

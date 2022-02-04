@@ -118,8 +118,8 @@ func TestTcpConn_Close(t *testing.T) {
 	err1 = con1.Close()
 	assert.NoError(t, err1)
 }
-func genRandData(seed int, datasetNum int) ([]byte, []int) {
-	dataSrc := make([]byte, 4096)
+func genRandData(seed int, datasetNum int, dataSrcLen int) ([]byte, []int) {
+	dataSrc := make([]byte, dataSrcLen)
 	//b := []byte("s")[0]
 	rand.Seed(int64(seed))
 	for i := 0; i < len(dataSrc); i++ {
@@ -141,7 +141,7 @@ func TestTcpConn_ClientRecvData(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	test_num := 10000
-	srcData, offList := genRandData(111, test_num)
+	srcData, offList := genRandData(111, test_num, 4096)
 	fmt.Printf("offList:%+v\n", offList[:100])
 	go func() {
 		defer wg.Done()
@@ -185,7 +185,7 @@ func TestTcpConn_ClientSendData(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	test_num := 10000
-	srcData, offList := genRandData(111, test_num)
+	srcData, offList := genRandData(111, test_num, 4096)
 	fmt.Printf("offList:%+v\n", offList[:100])
 	go func() {
 		defer wg.Done()

@@ -20,6 +20,7 @@ func NewMessager(opts ...Option) (Messager, error) {
 	case HTTP:
 		break
 	case HTTPCACHE:
+		return newHttpConn(o)
 		break
 	default:
 		//TCP

@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"time"
 )
 
 type Out struct {
@@ -34,6 +35,15 @@ func main() {
 		n, err = io.ReadFull(rd, buf)
 		fmt.Printf("=======n:%v,err:%v\n", n, err)
 	}
+	dur := time.NewTicker(time.Duration(2) * time.Second)
+	<-dur.C
+	fmt.Printf("1,结束\n")
+	//dur.Reset(6 * time.Second)
+	<-dur.C
+	dur.Stop()
+	fmt.Printf("after stop\n")
+	<-dur.C
+	fmt.Printf("2,结束\n")
 	//if *fg == 1 {
 	//	lst, err := net.Listen("tcp", ":18888")
 	//	if err != nil {
