@@ -47,7 +47,11 @@ func newTcpConn(opts ...Option) (*TcpConn, error) {
 	o := newOptions(opts...)
 	//dur := time.Tick(time.Second * time.Duration(o.TimeOut))
 	//可以手动停止任务
-	tick := time.NewTicker(time.Second * time.Duration(o.TimeOut))
+	//tick := time.NewTicker(time.Second * time.Duration(o.TimeOut))
+	tick := time.NewTimer(time.Second * time.Duration(o.TimeOut))
+	defer func() {
+		tick.Stop()
+	}()
 	ip := o.Ip
 	portInt := o.Port
 	port := strconv.Itoa(portInt)
@@ -77,7 +81,7 @@ func newTcpConn(opts ...Option) (*TcpConn, error) {
 			errRet = errors.New("server listen timeout")
 		}
 		//停止tick
-		tick.Stop()
+		//tick.Stop()
 		if errRet != nil {
 			//listener 关闭,保证accept退出
 			listener.Close()
@@ -96,7 +100,7 @@ func newTcpConn(opts ...Option) (*TcpConn, error) {
 		for {
 			select {
 			case <-tick.C:
-				tick.Stop()
+				//tick.Stop()
 				return nil, errors.New("dial timeout")
 			default:
 				c, err := net.Dial("tcp", ip+":"+port)
@@ -104,7 +108,7 @@ func newTcpConn(opts ...Option) (*TcpConn, error) {
 					continue
 				}
 				//释放资源
-				tick.Stop()
+				//tick.Stop()
 				DeLog.Infof(INFOPREFIX+"client: dial ok,remoteaddr:%v\n", c.RemoteAddr())
 				return &TcpConn{
 					o:           o,

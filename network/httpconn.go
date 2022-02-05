@@ -31,16 +31,20 @@ type HttpConn struct {
 	o          *Options
 	hBigC      *HttpBigCache
 	httpClient *http.Client
-	tick       *time.Ticker
+	tick       *time.Timer
+	timeout    time.Duration
+	//tick       *time.Ticker
 }
 
 func newHttpConn(opts ...Option) (*HttpConn, error) {
 	o := newOptions(opts...)
+	timeout := time.Second * time.Duration(o.TimeOut)
 	return &HttpConn{
 		o:          o,
 		hBigC:      o.HttpBigC,
 		httpClient: &http.Client{Transport: http.DefaultTransport},
-		tick:       time.NewTicker(time.Second * time.Duration(o.TimeOut))}, nil
+		tick:       time.NewTimer(timeout),
+		timeout:    timeout}, nil
 }
 
 func (h *HttpConn) SendData(key string, val []byte) (int, error) {
@@ -57,6 +61,9 @@ func (h *HttpConn) SendData(key string, val []byte) (int, error) {
 	return len(val), nil
 }
 func (h *HttpConn) RecvData(key string) ([]byte, error) {
+	defer func() {
+		h.tick.Reset(h.timeout)
+	}()
 	for {
 		select {
 		case <-h.tick.C:
