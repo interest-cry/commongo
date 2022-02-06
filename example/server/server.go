@@ -184,8 +184,8 @@ func (s *Server) Route() {
 	router := gin.New()
 	//router := gin.Default()
 	v1Grp := router.Group("/v1")
-	//v1Grp.POST("/send", s.HttpBigcache.HttpBigCacheHandlerFunc)
-	v1Grp.POST("/send", s.Eventbus.EventBusHandlerFunc)
+	v1Grp.POST("/send", s.HttpBigcache.HttpBigCacheHandlerFunc)
+	//v1Grp.POST("/send", s.Eventbus.EventBusHandlerFunc)
 	v1Grp.POST("/algo/start", s.StartTask)
 	if err := router.Run(s.Addr); err != nil {
 		network.DeLog.Infof(network.INFOPREFIX + "server run error")

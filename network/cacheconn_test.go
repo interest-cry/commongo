@@ -54,7 +54,7 @@ func (h *mockHttpServer) addPath(relativePath string) {
 func TestNewHttpBigCache(t *testing.T) {
 	NewHttpBigCache(10)
 }
-func TestHttpConn_Close(t *testing.T) {
+func TestCacheConn_Close(t *testing.T) {
 
 }
 func TestHttpBigCache_HttpBigCacheHandlerFunc(t *testing.T) {
@@ -119,10 +119,10 @@ func TestHttpBigCache_HttpBigCacheHandlerFunc(t *testing.T) {
 	wg.Wait()
 }
 
-func TestHttpConn_RecvData(t *testing.T) {
+func TestCacheConn_RecvData(t *testing.T) {
 
 }
-func TestHttpConn_SendData(t *testing.T) {
+func TestCacheConn_SendData(t *testing.T) {
 	relativePath := "/v1/send"
 	//mockSer, err := newMockServer(relativePath)
 	httpServer := newMockHttpServer(60)

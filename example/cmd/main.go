@@ -24,7 +24,7 @@ type Param struct {
 func main() {
 	cmds := flag.String("cmd", "server", "server cmd")
 	ip := flag.String("ip", "127.0.0.1", "ip address")
-	networkType := flag.String("net", "http", "network type")
+	networkType := flag.String("net", "cache", "network type")
 	port := flag.Int("port", 18001, "port")
 	flag.Parse()
 	uid := uuid.NewString()

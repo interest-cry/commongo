@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	DeLog *logrus.Logger
-	Log   *logrus.Logger
+	DeLog *logrus.Logger = logrus.New()
+	Log   *logrus.Logger = logrus.New()
 )
 
 const (
@@ -15,8 +15,8 @@ const (
 )
 
 func init() {
-	DeLog = logrus.New()
+	//DeLog = logrus.New()
 	DeLog.SetLevel(logrus.DebugLevel)
-	Log = logrus.New()
+	//Log = logrus.New()
 	Log.SetLevel(logrus.ErrorLevel)
 }
