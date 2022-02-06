@@ -29,7 +29,7 @@ func newHttpConn(opts ...Option) (*HttpConn, error) {
 	timeout := time.Second * time.Duration(o.TimeOut)
 	return &HttpConn{
 		o:          o,
-		hBigC:      o.HttpBigC,
+		hBigC:      o.HttpBigcache,
 		httpClient: &http.Client{Transport: http.DefaultTransport},
 		tick:       time.NewTimer(timeout),
 		timeout:    timeout}, nil
@@ -103,7 +103,7 @@ func init() {
 	}
 }
 
-func (hb *HttpBigCache) BigCacheHandlerFunc(c *gin.Context) {
+func (hb *HttpBigCache) HttpBigCacheHandlerFunc(c *gin.Context) {
 	var req HttpConnRequest
 	err := c.BindJSON(&req)
 	if err != nil {

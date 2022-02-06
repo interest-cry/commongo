@@ -265,7 +265,7 @@ func TestEventBus_EventBusHandlerFuncThreeNode(t *testing.T) {
 
 	uid = uuid1.String()
 	uid = guuid.New().String()
-	datasetNum := 10000
+	datasetNum := 100
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 	//第一个服务节点

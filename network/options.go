@@ -5,7 +5,7 @@ type Options struct {
 	Port           int
 	TimeOut        int
 	ClientOrServer string
-	HttpBigC       *HttpBigCache
+	HttpBigcache   *HttpBigCache
 	SendUrl        string
 	EventB         *EventBus
 	Uid            string
@@ -19,7 +19,7 @@ func newOptions(opts ...Option) *Options {
 		Port:           18888,
 		TimeOut:        3600,
 		ClientOrServer: CLIENT,
-		HttpBigC:       DefaultHttpBigCache,
+		HttpBigcache:   DefaultHttpBigCache,
 		SendUrl:        "/v1/send",
 		EventB:         DefaultEventBus,
 		Uid:            "2022-02-04",
@@ -56,7 +56,7 @@ func TimeOut(seconds int) Option {
 //Options for HttpBigCache
 func BigCache(bigCache *HttpBigCache) Option {
 	return func(o *Options) {
-		o.HttpBigC = bigCache
+		o.HttpBigcache = bigCache
 	}
 }
 func SendUrl(sendUrl string) Option {

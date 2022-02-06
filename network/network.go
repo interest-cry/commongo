@@ -9,26 +9,37 @@ type Messager interface {
 type Option func(o *Options)
 
 const (
-	TCPCONN  = "TCPCONN"
-	HTTP     = "HTTP"
+	TCPCONN = "TCPCONN"
+	//HTTP     = "HTTP"
 	HTTPCONN = "HTTPCONN"
 	CHANCONN = "CHANCONN"
 )
 
+var NetworkMap map[string]string = map[string]string{
+	"tcp":  TCPCONN,
+	"http": HTTPCONN,
+	"chan": CHANCONN,
+}
+
 func NewMessager(netWorkType string, opts ...Option) (Messager, error) {
 	//o := newOptions(opts...)
 	switch netWorkType {
-	case HTTP:
-		break
+	//case HTTP:
+	//	break
 	case HTTPCONN:
+		DeLog.Infof("===HTTPCONN")
 		return newHttpConn(opts...)
 
 	case TCPCONN:
+		DeLog.Infof("===TCPCONN")
 		return newTcpConn(opts...)
 
 	case CHANCONN:
+		DeLog.Infof("===CHANCONN")
 		return newChanConn(opts...)
 	default:
+		DeLog.Infof("===TCPCONN")
+
 		return newTcpConn(opts...)
 	}
 	return nil, nil
