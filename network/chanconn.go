@@ -147,26 +147,6 @@ type ChanConn struct {
 	timeout    time.Duration
 }
 
-func EventBusSet(eventB *EventBus) Option {
-	return func(o *Options) {
-		o.EventB = eventB
-	}
-}
-func Uid(uid string) Option {
-	return func(o *Options) {
-		o.Uid = uid
-	}
-}
-func LocalNid(localNid string) Option {
-	return func(o *Options) {
-		o.LocalNid = localNid
-	}
-}
-func RemoteNid(remoteNid string) Option {
-	return func(o *Options) {
-		o.RemoteNid = remoteNid
-	}
-}
 func newChanConn(opts ...Option) (*ChanConn, error) {
 	o := newOptions(opts...)
 	topic := o.RemoteNid + "_" + o.Uid

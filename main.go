@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"fmt"
+	suid "github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"io"
 	"math/rand"
 	"net"
@@ -35,15 +37,42 @@ func main() {
 		n, err = io.ReadFull(rd, buf)
 		fmt.Printf("=======n:%v,err:%v\n", n, err)
 	}
-	dur := time.NewTicker(time.Duration(2) * time.Second)
-	<-dur.C
-	fmt.Printf("1,结束\n")
+	//dur := time.NewTicker(time.Duration(1) * time.Second)
+	dur := time.NewTimer(1 * time.Second)
+	for i := 0; i < 1; i++ {
+		select {
+		case <-dur.C:
+			fmt.Printf("===i:%+v\n", i)
+		}
+		dur.Reset(1 * time.Second)
+	}
+	//wg := sync.WaitGroup{}
+	//wg.Add(2)
+	//go func() {
+	//	//defer wg.Done()
+	//	<-dur.C
+	//	fmt.Printf("1,结束\n")
+	//}()
+
 	//dur.Reset(6 * time.Second)
-	<-dur.C
-	dur.Stop()
-	fmt.Printf("after stop\n")
-	<-dur.C
-	fmt.Printf("2,结束\n")
+	//dur.
+	//time.Sleep(time.Second * 2)
+	//dur.Reset(2 * time.Second)
+	//fmt.Printf("-----------\n")
+	//<-dur.C
+	////<-dur.C
+	//fmt.Printf("2,结束\n")
+	//dur.Stop()
+	//fmt.Printf("after stop\n")
+	//<-dur.C
+	fmt.Printf("3,结束\n")
+	uid := uuid.New().String()
+	uid = uuid.NewString()
+	fmt.Printf("uid :%v\n", uid)
+	su, _ := suid.NewV4()
+	fmt.Printf("suid:%v\n", su.String())
+	//tm := time.NewTimer(2 * time.Second)
+
 	//if *fg == 1 {
 	//	lst, err := net.Listen("tcp", ":18888")
 	//	if err != nil {

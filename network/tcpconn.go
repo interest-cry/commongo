@@ -14,23 +14,6 @@ const (
 	SERVER = "SERVER"
 )
 
-func Ip(ip string) Option {
-	return func(o *Options) {
-		o.Ip = ip
-	}
-}
-func Port(port int) Option {
-	return func(o *Options) {
-		o.Port = port
-	}
-}
-
-func ClientOrServer(cliOrSer string) Option {
-	return func(o *Options) {
-		o.ClientOrServer = cliOrSer
-	}
-}
-
 type connResult struct {
 	c   net.Conn
 	err error

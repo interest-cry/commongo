@@ -10,18 +10,6 @@ import (
 	"time"
 )
 
-//Options for HttpBigCache
-func BigCache(bigCache *HttpBigCache) Option {
-	return func(o *Options) {
-		o.HttpBigC = bigCache
-	}
-}
-func SendUrl(sendUrl string) Option {
-	return func(o *Options) {
-		o.SendUrl = sendUrl
-	}
-}
-
 //http conn req
 type HttpConnRequest struct {
 	Key  string `json:"key"`
