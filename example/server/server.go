@@ -23,10 +23,16 @@ type Rsp struct {
 type Req struct {
 	NetworkType string `json:"network_type"`
 	Role        string `json:"role"`
-	SendUrl     string `json:"send_url"`
-	Uid         string `json:"uid"`
-	LocalNid    string `json:"local_nid"`
-	RemoteNid   string `json:"remote_nid"`
+	//tcp
+	Ip             string
+	Port           int
+	TimeOut        int
+	ClientOrServer string
+	//cache,chan
+	SendUrl   string `json:"send_url"`
+	Uid       string `json:"uid"`
+	LocalNid  string `json:"local_nid"`
+	RemoteNid string `json:"remote_nid"`
 	//HostRemotes []string `json:"host_remotes"`
 	//Host string
 }
@@ -46,16 +52,10 @@ func NewServer(addr, networkType string) (*Server, error) {
 	//httpBigCache := network.NewHttpBigCache(1800)
 	httpBigCache := network.DefaultHttpBigCache
 	//Eventbus := network.DefaultEventBus
-	Eventbus := network.NewEventBus(60)
-	allHander := network.NewAllHandler(60)
-	httpBigCache, ok := allHander.GetHandler(network.CACHECONN).(*network.HttpBigCache)
-	if !ok {
-		panic("GetHandler not ok")
-	}
-	Eventbus, ok = allHander.GetHandler(network.CHANCONN).(*network.EventBus)
-	if !ok {
-		panic("GetHandler not ok")
-	}
+	Eventbus := network.NewEventBus(3600)
+	allHander := network.NewAllHandler(3600)
+	httpBigCache = allHander.GetHttpBigCache()
+	Eventbus = allHander.GetEventBus()
 	return &Server{
 		AllHand:      allHander,
 		Addr:         addr,
@@ -97,7 +97,20 @@ func GenRandDataDebug(seed int, datasetNum int, dataSrcLen int) ([]byte, []int) 
 	}
 	return dataSrc, offList
 }
-
+func connHandle(req Req, httpBigCache *network.HttpBigCache, eventBus *network.EventBus) (network.Messager, error) {
+	msgHandle, err := network.NewMessager(
+		req.NetworkType,
+		network.Ip(req.Ip),
+		network.Port(req.Port),
+		network.ClientOrServer(req.ClientOrServer),
+		network.BigCache(httpBigCache),
+		network.SendUrl(req.SendUrl),
+		network.Uid(req.Uid),
+		network.EventBusSet(eventBus),
+		network.LocalNid(req.LocalNid),
+		network.RemoteNid(req.RemoteNid))
+	return msgHandle, err
+}
 func (s *Server) StartTask(c *gin.Context) {
 	req := Req{}
 	err := c.BindJSON(&req)
@@ -105,21 +118,14 @@ func (s *Server) StartTask(c *gin.Context) {
 		network.DeLog.Infof(network.INFOPREFIX+"SaveData BindJson error:%v\n", err)
 		return
 	}
-	network.DeLog.Infof("===req:%+v", req)
-	datasetNum := 1000 * 100
-	datasetNum = 10
+	network.DeLog.Infof(network.INFOPREFIX+"req:%+v", req)
+	datasetNum := 10000 * 50
+	//datasetNum = 10
 	//datasetNum = 10
 	dataSrcLen := 10240000
 	switch req.Role {
 	case GUEST:
-		msgHandle, err := network.NewMessager(
-			req.NetworkType,
-			network.BigCache(s.HttpBigcache),
-			network.SendUrl(req.SendUrl),
-			network.Uid(req.Uid),
-			network.EventBusSet(s.Eventbus),
-			network.LocalNid(req.LocalNid),
-			network.RemoteNid(req.RemoteNid))
+		msgHandle, err := connHandle(req, s.HttpBigcache, s.Eventbus)
 		if err != nil {
 			c.JSON(200, &Rsp{err.Error(), -10})
 			return
@@ -148,17 +154,18 @@ func (s *Server) StartTask(c *gin.Context) {
 				c.JSON(200, gin.H{"msg": err.Error()})
 				return
 			}
-			network.DeLog.Infof("[%v]RecvData,key:%v,data:%v", req.LocalNid, key, string(data))
+			network.DeLog.Infof("[%v]RecvData,key:%v,data:%v,net:%v", req.LocalNid, key, string(data), req.NetworkType)
 		}
 	case HOST:
-		msgHandle, err := network.NewMessager(
-			req.NetworkType,
-			network.BigCache(s.AllHand.GetHandler(network.CACHECONN).(*network.HttpBigCache)),
-			network.SendUrl(req.SendUrl),
-			network.Uid(req.Uid),
-			network.EventBusSet(s.AllHand.GetHandler(network.CHANCONN).(*network.EventBus)),
-			network.LocalNid(req.LocalNid),
-			network.RemoteNid(req.RemoteNid))
+		//msgHandle, err := network.NewMessager(
+		//	req.NetworkType,
+		//	network.BigCache(s.HttpBigcache),
+		//	network.SendUrl(req.SendUrl),
+		//	network.Uid(req.Uid),
+		//	network.EventBusSet(s.Eventbus),
+		//	network.LocalNid(req.LocalNid),
+		//	network.RemoteNid(req.RemoteNid))
+		msgHandle, err := connHandle(req, s.HttpBigcache, s.Eventbus)
 		if err != nil {
 			c.JSON(200, &Rsp{err.Error(), -10})
 			return
@@ -178,7 +185,7 @@ func (s *Server) StartTask(c *gin.Context) {
 				return
 			}
 			//network.DeLog.Infof(network.INFOPREFIX+"i:%v,ret len:%v,err:%v\n", i, len(ret), err)
-			network.DeLog.Infof("[%v]RecvData,key:%v,data:%v", req.LocalNid, key, string(data))
+			network.DeLog.Infof("[%v]RecvData,key:%v,data:%v,net:%v", req.LocalNid, key, string(data), req.NetworkType)
 			//再发送
 			send_key := req.LocalNid + "_" + req.Uid + "_" + strconv.Itoa(i)
 			_, err = msgHandle.SendData(send_key, []byte("msg_"+send_key))

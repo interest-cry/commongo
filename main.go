@@ -145,4 +145,10 @@ func main() {
 	//	//fmt.Printf("dial ok,c:%+v\n", c)
 	//}
 	fmt.Printf("==========\n\n")
+	tt(18, 17)
+}
+
+func tt(ints ...int) {
+	ints = append(ints, 16)
+	fmt.Printf("===%+v\n", ints)
 }

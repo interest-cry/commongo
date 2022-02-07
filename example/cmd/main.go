@@ -10,14 +10,17 @@ import (
 )
 
 type Param struct {
-	uid           string
-	guestNid      string
-	hostNid       string
-	networkType   string
-	guestSendUrl  string
-	hostSendUrl   string
-	guestStartUrl string
-	hostStartUrl  string
+	ip             string
+	port           int
+	clientOrServer string
+	uid            string
+	guestNid       string
+	hostNid        string
+	networkType    string
+	guestSendUrl   string
+	hostSendUrl    string
+	guestStartUrl  string
+	hostStartUrl   string
 }
 
 //./main -cmd=server -ip=127.0.0.2 -port=18002
@@ -35,6 +38,8 @@ func main() {
 		guestStartUrl := "http://127.0.0.1:18001/v1/algo/start"
 		hosttStartUrl := "http://127.0.0.2:18002/v1/algo/start"
 		param := Param{
+			ip:            *ip,
+			port:          28000,
 			uid:           uid,
 			guestNid:      "nid1",
 			hostNid:       "nid2",
@@ -58,24 +63,30 @@ func clientCmdSdk(param Param) {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	reqGuest := server.Req{
-		NetworkType: network.NetworkMap[param.networkType],
-		Role:        server.GUEST,
-		SendUrl:     param.hostSendUrl,
-		Uid:         param.uid,
-		LocalNid:    param.guestNid,
-		RemoteNid:   param.hostNid,
+		NetworkType:    network.NetworkMap[param.networkType],
+		Role:           server.GUEST,
+		Ip:             param.ip,
+		Port:           param.port,
+		ClientOrServer: network.CLIENT,
+		SendUrl:        param.hostSendUrl,
+		Uid:            param.uid,
+		LocalNid:       param.guestNid,
+		RemoteNid:      param.hostNid,
 	}
 	go func() {
 		defer wg.Done()
 		server.StartTestSdk(&reqGuest, param.guestStartUrl)
 	}()
 	reqHost := server.Req{
-		NetworkType: network.NetworkMap[param.networkType],
-		Role:        server.HOST,
-		SendUrl:     param.guestSendUrl,
-		Uid:         param.uid,
-		LocalNid:    param.hostNid,
-		RemoteNid:   param.guestNid,
+		NetworkType:    network.NetworkMap[param.networkType],
+		Role:           server.HOST,
+		Ip:             param.ip,
+		Port:           param.port,
+		ClientOrServer: network.SERVER,
+		SendUrl:        param.guestSendUrl,
+		Uid:            param.uid,
+		LocalNid:       param.hostNid,
+		RemoteNid:      param.guestNid,
 	}
 	go func() {
 		defer wg.Done()

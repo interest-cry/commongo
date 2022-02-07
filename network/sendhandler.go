@@ -56,12 +56,35 @@ func (a *AllHandler) SendHandlerFunc(c *gin.Context) {
 
 func (a *AllHandler) GetHandler(networkType string) SendHandler {
 	h, ok := a.handlers.Load(networkType)
-	//fmt.Printf("=========map:%+v\n", a.handlers)
-	//h, ok := a.handlers[networkType]
 	if !ok {
-		DeLog.Infof(INFOPREFIX + "GetHandler get handler by network type")
-		return nil
+		panic("handlers.Load not ok")
 	}
-	hand := h.(SendHandler)
+	hand, ok := h.(SendHandler)
+	if !ok {
+		panic("h.(SendHandler) not ok")
+	}
+	return hand
+}
+
+func (a *AllHandler) GetHttpBigCache() *HttpBigCache {
+	h, ok := a.handlers.Load(CACHECONN)
+	if !ok {
+		panic("GetHttpBigCache error ,not ok")
+	}
+	hand, ok := h.(*HttpBigCache)
+	if !ok {
+		panic("GetHttpBigCache error ,not ok")
+	}
+	return hand
+}
+func (a *AllHandler) GetEventBus() *EventBus {
+	h, ok := a.handlers.Load(CHANCONN)
+	if !ok {
+		panic("GetEventBus error,not ok")
+	}
+	hand, ok := h.(*EventBus)
+	if !ok {
+		panic("GetEventBus error,not ok")
+	}
 	return hand
 }
