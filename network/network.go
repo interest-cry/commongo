@@ -1,5 +1,7 @@
 package network
 
+import "errors"
+
 //消息发送接口
 type Messager interface {
 	SendData(key string, val []byte) (int, error)
@@ -15,6 +17,14 @@ const (
 	CHANCONN  = "CHANCONN"
 )
 
+type newConnFunc func(opts ...Option) (Messager, error)
+
+var NetworkRegister []string = []string{TCPCONN, CACHECONN, CHANCONN}
+var NetworkConnRegister map[string]newConnFunc = map[string]newConnFunc{
+	CHANCONN:  newChanConn,
+	CACHECONN: newCacheConn,
+	TCPCONN:   newTcpConn,
+}
 var NetworkMap map[string]string = map[string]string{
 	"tcp":   TCPCONN,
 	"http":  HTTP,
@@ -24,24 +34,31 @@ var NetworkMap map[string]string = map[string]string{
 
 func NewMessager(netWorkType string, opts ...Option) (Messager, error) {
 	//o := newOptions(opts...)
-	switch netWorkType {
-	case HTTP:
-		break
-	case CACHECONN:
-		DeLog.Infof("===CACHECONN")
-		return newHttpConn(opts...)
-
-	case TCPCONN:
-		DeLog.Infof("===TCPCONN")
-		return newTcpConn(opts...)
-
-	case CHANCONN:
-		DeLog.Infof("===CHANCONN")
-		return newChanConn(opts...)
-	default:
-		DeLog.Infof("===TCPCONN")
-
-		return newTcpConn(opts...)
+	opts = append(opts, NetworkType(netWorkType))
+	DeLog.Infof("===netWorkType:%v", netWorkType)
+	connFunc, ok := NetworkConnRegister[netWorkType]
+	if !ok {
+		return nil, errors.New("error:not in NetworkConnRegister")
 	}
-	return nil, nil
+	return connFunc(opts...)
+	//switch netWorkType {
+	//case HTTP:
+	//	break
+	//case CACHECONN:
+	//	DeLog.Infof("===CACHECONN")
+	//	return newHttpConn(opts...)
+	//
+	//case TCPCONN:
+	//	DeLog.Infof("===TCPCONN")
+	//	return newTcpConn(opts...)
+	//
+	//case CHANCONN:
+	//	DeLog.Infof("===CHANCONN")
+	//	return newChanConn(opts...)
+	//default:
+	//	DeLog.Infof("===TCPCONN")
+	//
+	//	return newTcpConn(opts...)
+	//}
+	//return nil, nil
 }

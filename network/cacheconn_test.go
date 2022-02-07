@@ -27,7 +27,7 @@ func newMockHttpServer(sec int) *mockHttpServer {
 }
 
 func (h *mockHttpServer) addPath(relativePath string) {
-	h.engine.POST(relativePath, h.httpBigCache.HttpBigCacheHandlerFunc)
+	h.engine.POST(relativePath, h.httpBigCache.HandleMessageGin)
 }
 
 //func (s *mockServer) saveData(c *gin.Context) {
@@ -80,7 +80,7 @@ func TestHttpBigCache_HttpBigCacheHandlerFunc(t *testing.T) {
 	go func() {
 		defer func() { wg.Done() }()
 		//创建一个连接
-		httpConn2, err := newHttpConn(
+		httpConn2, err := newCacheConn(
 			SendUrl(service2.URL+path2),
 			BigCache(hServer1.httpBigCache))
 		assert.NoError(t, err)
@@ -100,7 +100,7 @@ func TestHttpBigCache_HttpBigCacheHandlerFunc(t *testing.T) {
 	go func() {
 		defer func() { wg.Done() }()
 		//创建一个连接
-		httpConn1, err := newHttpConn(
+		httpConn1, err := newCacheConn(
 			SendUrl(service1.URL+path1),
 			BigCache(hServer2.httpBigCache))
 		assert.NoError(t, err)
@@ -130,7 +130,7 @@ func TestCacheConn_SendData(t *testing.T) {
 	//启动一个服务
 	service := httptest.NewServer(httpServer.engine)
 	defer func() { service.Close() }()
-	httpConn, err := newHttpConn(SendUrl(service.URL+relativePath),
+	httpConn, err := newCacheConn(SendUrl(service.URL+relativePath),
 		BigCache(httpServer.httpBigCache))
 	assert.NoError(t, err)
 	defer func() { httpConn.Close() }()
@@ -186,7 +186,7 @@ func BenchmarkHttpBigCache_HttpBigCacheHandlerFunc(b *testing.B) {
 	go func() {
 		defer func() { wg.Done() }()
 		//创建一个连接
-		httpConn2, _ := newHttpConn(
+		httpConn2, _ := newCacheConn(
 			SendUrl(service2.URL+path2),
 			BigCache(hServer1.httpBigCache))
 		//assert.NoError(t, err)
@@ -207,7 +207,7 @@ func BenchmarkHttpBigCache_HttpBigCacheHandlerFunc(b *testing.B) {
 	go func() {
 		defer func() { wg.Done() }()
 		//创建一个连接
-		httpConn1, _ := newHttpConn(
+		httpConn1, _ := newCacheConn(
 			SendUrl(service1.URL+path1),
 			BigCache(hServer2.httpBigCache))
 		//assert.NoError(t, err)

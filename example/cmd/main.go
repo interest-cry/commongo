@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/Zhenhanyijiu/commongo/example/server"
+	"github.com/Zhenhanyijiu/commongo/network"
 	"github.com/google/uuid"
 	"strconv"
 	"sync"
@@ -57,7 +58,7 @@ func clientCmdSdk(param Param) {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	reqGuest := server.Req{
-		NetworkType: param.networkType,
+		NetworkType: network.NetworkMap[param.networkType],
 		Role:        server.GUEST,
 		SendUrl:     param.hostSendUrl,
 		Uid:         param.uid,
@@ -69,7 +70,7 @@ func clientCmdSdk(param Param) {
 		server.StartTestSdk(&reqGuest, param.guestStartUrl)
 	}()
 	reqHost := server.Req{
-		NetworkType: param.networkType,
+		NetworkType: network.NetworkMap[param.networkType],
 		Role:        server.HOST,
 		SendUrl:     param.guestSendUrl,
 		Uid:         param.uid,

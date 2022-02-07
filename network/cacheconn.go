@@ -10,21 +10,15 @@ import (
 	"time"
 )
 
-//Cache conn req
-type CacheConnRequest struct {
-	Key  string `json:"key"`
-	Data []byte `json:"data"`
-}
 type CacheConn struct {
 	o            *Options
 	httpBigCache *HttpBigCache
 	httpClient   *http.Client
 	tick         *time.Timer
 	timeout      time.Duration
-	//tick       *time.Ticker
 }
 
-func newHttpConn(opts ...Option) (*CacheConn, error) {
+func newCacheConn(opts ...Option) (Messager, error) {
 	o := newOptions(opts...)
 	timeout := time.Second * time.Duration(o.TimeOut)
 	return &CacheConn{
@@ -36,9 +30,10 @@ func newHttpConn(opts ...Option) (*CacheConn, error) {
 }
 
 func (h *CacheConn) SendData(key string, val []byte) (int, error) {
-	req := CacheConnRequest{
-		Key:  key,
-		Data: val,
+	req := RequestForSend{
+		NetworkType: h.o.NetworkType,
+		Key:         key,
+		Data:        val,
 	}
 	dataJson, _ := json.Marshal(&req)
 	rsp, err := h.httpClient.Post(h.o.SendUrl, "application/json", bytes.NewReader(dataJson))
@@ -92,25 +87,29 @@ func NewHttpBigCache(sec int) *HttpBigCache {
 
 var DefaultHttpBigCache *HttpBigCache = &HttpBigCache{}
 
-func init() {
-	conf := bigcache.DefaultConfig(1800 * time.Second)
-	conf.CleanWindow = time.Millisecond * 500
-	DeLog.Infof(INFOPREFIX+"DefaultBigCache config:%+v", conf)
-	var err error
-	DefaultHttpBigCache.bigCache, err = bigcache.NewBigCache(conf)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (hb *HttpBigCache) HttpBigCacheHandlerFunc(c *gin.Context) {
-	var req CacheConnRequest
+func (hb *HttpBigCache) HandleMessageGin(c *gin.Context) {
+	var req RequestForSend
 	err := c.BindJSON(&req)
 	if err != nil {
 		DeLog.Infof(INFOPREFIX+"SaveData BindJson error:%v", err)
 		return
 	}
 	err = hb.bigCache.Set(req.Key, req.Data)
+	if err != nil {
+		DeLog.Infof(INFOPREFIX+"SaveData set val error:%v", err)
+		return
+	}
+	//DeLog.Infof(INFOPREFIX + "save data ok")
+	return
+	//message.Log.Infof("===>>本地缓存 set data ok")
+	//todo:不需要响应返回
+	//c.JSON(200, gin.H{
+	//	"msg": "ok",
+	//})
+}
+
+func (hb *HttpBigCache) HandleMessage(req RequestForSend) {
+	err := hb.bigCache.Set(req.Key, req.Data)
 	if err != nil {
 		DeLog.Infof(INFOPREFIX+"SaveData set val error:%v", err)
 		return

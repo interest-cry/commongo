@@ -1,6 +1,13 @@
 package network
 
+import (
+	"github.com/allegro/bigcache"
+	"github.com/sirupsen/logrus"
+	"time"
+)
+
 type Options struct {
+	NetworkType    string
 	Ip             string
 	Port           int
 	TimeOut        int
@@ -15,6 +22,7 @@ type Options struct {
 
 func newOptions(opts ...Option) *Options {
 	opt := Options{
+		NetworkType:    TCPCONN,
 		Ip:             "127.0.0.1",
 		Port:           18888,
 		TimeOut:        3600,
@@ -31,6 +39,11 @@ func newOptions(opts ...Option) *Options {
 	}
 	DeLog.Infof(INFOPREFIX+"Options:%+v\n", opt)
 	return &opt
+}
+func NetworkType(networkTpye string) Option {
+	return func(o *Options) {
+		o.NetworkType = networkTpye
+	}
 }
 func Ip(ip string) Option {
 	return func(o *Options) {
@@ -85,4 +98,31 @@ func RemoteNid(remoteNid string) Option {
 	return func(o *Options) {
 		o.RemoteNid = remoteNid
 	}
+}
+
+var (
+	DeLog *logrus.Logger = logrus.New()
+	Log   *logrus.Logger = logrus.New()
+)
+
+const (
+	INFOPREFIX = "[=== INFO]"
+	WARNPREFIX = "[=== WARN]"
+)
+
+func init() {
+	DeLog.SetLevel(logrus.DebugLevel)
+	Log.SetLevel(logrus.ErrorLevel)
+	conf := bigcache.DefaultConfig(1800 * time.Second)
+	conf.CleanWindow = time.Millisecond * 500
+	DeLog.Infof(INFOPREFIX+"DefaultBigCache config:%+v", conf)
+	var err error
+	DefaultHttpBigCache.bigCache, err = bigcache.NewBigCache(conf)
+	if err != nil {
+		panic(err)
+	}
+	DefaultAllHandler.handlers.Store(CACHECONN, DefaultHttpBigCache)
+	//DefaultAllHandler.handlers[CACHECONN] = DefaultHttpBigCache
+	DefaultAllHandler.handlers.Store(CHANCONN, DefaultEventBus)
+	//DefaultAllHandler.handlers[CHANCONN] = DefaultEventBus
 }

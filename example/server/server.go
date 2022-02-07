@@ -31,6 +31,7 @@ type Req struct {
 	//Host string
 }
 type Server struct {
+	AllHand      *network.AllHandler
 	HttpBigcache *network.HttpBigCache
 	Eventbus     *network.EventBus
 	Addr         string
@@ -46,7 +47,17 @@ func NewServer(addr, networkType string) (*Server, error) {
 	httpBigCache := network.DefaultHttpBigCache
 	//Eventbus := network.DefaultEventBus
 	Eventbus := network.NewEventBus(60)
+	allHander := network.NewAllHandler(60)
+	httpBigCache, ok := allHander.GetHandler(network.CACHECONN).(*network.HttpBigCache)
+	if !ok {
+		panic("GetHandler not ok")
+	}
+	Eventbus, ok = allHander.GetHandler(network.CHANCONN).(*network.EventBus)
+	if !ok {
+		panic("GetHandler not ok")
+	}
 	return &Server{
+		AllHand:      allHander,
 		Addr:         addr,
 		HttpBigcache: httpBigCache,
 		Eventbus:     Eventbus,
@@ -96,12 +107,13 @@ func (s *Server) StartTask(c *gin.Context) {
 	}
 	network.DeLog.Infof("===req:%+v", req)
 	datasetNum := 1000 * 100
+	datasetNum = 10
 	//datasetNum = 10
 	dataSrcLen := 10240000
 	switch req.Role {
 	case GUEST:
 		msgHandle, err := network.NewMessager(
-			network.NetworkMap[req.NetworkType],
+			req.NetworkType,
 			network.BigCache(s.HttpBigcache),
 			network.SendUrl(req.SendUrl),
 			network.Uid(req.Uid),
@@ -140,11 +152,11 @@ func (s *Server) StartTask(c *gin.Context) {
 		}
 	case HOST:
 		msgHandle, err := network.NewMessager(
-			network.NetworkMap[req.NetworkType],
-			network.BigCache(s.HttpBigcache),
+			req.NetworkType,
+			network.BigCache(s.AllHand.GetHandler(network.CACHECONN).(*network.HttpBigCache)),
 			network.SendUrl(req.SendUrl),
 			network.Uid(req.Uid),
-			network.EventBusSet(s.Eventbus),
+			network.EventBusSet(s.AllHand.GetHandler(network.CHANCONN).(*network.EventBus)),
 			network.LocalNid(req.LocalNid),
 			network.RemoteNid(req.RemoteNid))
 		if err != nil {
@@ -184,8 +196,9 @@ func (s *Server) Route() {
 	router := gin.New()
 	//router := gin.Default()
 	v1Grp := router.Group("/v1")
-	v1Grp.POST("/send", s.HttpBigcache.HttpBigCacheHandlerFunc)
-	//v1Grp.POST("/send", s.Eventbus.EventBusHandlerFunc)
+	//v1Grp.POST("/send", s.HttpBigcache.HandleMessageGin)
+	//v1Grp.POST("/send", s.Eventbus.HandleMessageGin)
+	v1Grp.POST("/send", s.AllHand.SendHandlerFunc)
 	v1Grp.POST("/algo/start", s.StartTask)
 	if err := router.Run(s.Addr); err != nil {
 		network.DeLog.Infof(network.INFOPREFIX + "server run error")

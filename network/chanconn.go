@@ -17,8 +17,6 @@ type DataEvent struct {
 }
 type DataEventChan chan DataEvent
 
-//type DataChannelSlice []DataChannel
-
 //事件总线
 type EventBus struct {
 	//subscribers map[string]DataEventChan
@@ -50,7 +48,7 @@ func (eb *EventBus) Publish(event DataEvent) error {
 	//}()
 	tick := time.NewTimer(eb.timeout)
 	defer func() {
-		tick.Reset(eb.timeout)
+		tick.Stop()
 	}()
 	for {
 		select {
@@ -103,16 +101,8 @@ func NewEventBus(timeout int) *EventBus {
 	}
 }
 
-//http conn req
-type ChanConnRequest struct {
-	RemoteNid string `json:"remote_nid"`
-	Uid       string `json:"uid"`
-	Key       string `json:"key"`
-	Data      []byte `json:"data"`
-}
-
-func (e *EventBus) EventBusHandlerFunc(c *gin.Context) {
-	var req ChanConnRequest
+func (e *EventBus) HandleMessageGin(c *gin.Context) {
+	var req RequestForSend
 	err := c.BindJSON(&req)
 	if err != nil {
 		DeLog.Infof(INFOPREFIX+"SaveData BindJson error:%v", err)
@@ -134,8 +124,20 @@ func (e *EventBus) EventBusHandlerFunc(c *gin.Context) {
 	//})
 }
 
-func init() {
-	//maps:=sync.Map{}
+func (e *EventBus) HandleMessage(req RequestForSend) {
+	topic := req.RemoteNid + "_" + req.Uid
+	err := e.Publish(DataEvent{Topic: topic, Key: req.Key, Data: req.Data})
+	if err != nil {
+		DeLog.Infof(INFOPREFIX+"SaveData set val error:%v", err)
+		return
+	}
+	//DeLog.Infof(INFOPREFIX + "save data ok")
+	return
+	//message.Log.Infof("===>>本地缓存 set data ok")
+	//todo:不需要响应返回
+	//c.JSON(200, gin.H{
+	//	"msg": "ok",
+	//})
 }
 
 type ChanConn struct {
@@ -147,7 +149,7 @@ type ChanConn struct {
 	timeout    time.Duration
 }
 
-func newChanConn(opts ...Option) (*ChanConn, error) {
+func newChanConn(opts ...Option) (Messager, error) {
 	o := newOptions(opts...)
 	topic := o.RemoteNid + "_" + o.Uid
 	//关键,订阅
@@ -165,11 +167,12 @@ func newChanConn(opts ...Option) (*ChanConn, error) {
 }
 
 func (c *ChanConn) SendData(key string, val []byte) (int, error) {
-	req := ChanConnRequest{
-		RemoteNid: c.o.LocalNid,
-		Uid:       c.o.Uid,
-		Key:       key,
-		Data:      val,
+	req := RequestForSend{
+		NetworkType: c.o.NetworkType,
+		RemoteNid:   c.o.LocalNid,
+		Uid:         c.o.Uid,
+		Key:         key,
+		Data:        val,
 	}
 	dataJson, _ := json.Marshal(&req)
 	rsp, err := c.httpClient.Post(c.o.SendUrl, "application/json", bytes.NewReader(dataJson))
