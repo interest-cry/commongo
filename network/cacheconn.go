@@ -18,7 +18,7 @@ type CacheConn struct {
 	timeout      time.Duration
 }
 
-func newCacheConn(opts ...Option) (Messager, error) {
+func newCacheConn(opts ...Option) (Communicator, error) {
 	o := newOptions(opts...)
 	timeout := time.Second * time.Duration(o.TimeOut)
 	return &CacheConn{
@@ -30,7 +30,7 @@ func newCacheConn(opts ...Option) (Messager, error) {
 }
 
 func (h *CacheConn) SendData(key string, val []byte) (int, error) {
-	req := RequestForSend{
+	req := requestForSend{
 		NetworkType: h.o.NetworkType,
 		Key:         key,
 		Data:        val,
@@ -87,8 +87,8 @@ func NewHttpBigCache(sec int) *HttpBigCache {
 
 var DefaultHttpBigCache *HttpBigCache = &HttpBigCache{}
 
-func (hb *HttpBigCache) HandleMessageGin(c *gin.Context) {
-	var req RequestForSend
+func (hb *HttpBigCache) WriteMessageGin(c *gin.Context) {
+	var req requestForSend
 	err := c.BindJSON(&req)
 	if err != nil {
 		DeLog.Infof(INFOPREFIX+"SaveData BindJson error:%v", err)
@@ -108,7 +108,7 @@ func (hb *HttpBigCache) HandleMessageGin(c *gin.Context) {
 	//})
 }
 
-func (hb *HttpBigCache) HandleMessage(req RequestForSend) {
+func (hb *HttpBigCache) WriteMessage(req requestForSend) {
 	err := hb.bigCache.Set(req.Key, req.Data)
 	if err != nil {
 		DeLog.Infof(INFOPREFIX+"SaveData set val error:%v", err)

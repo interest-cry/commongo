@@ -121,8 +121,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	DefaultAllHandler.handlers.Store(CACHECONN, DefaultHttpBigCache)
-	//DefaultAllHandler.handlers[CACHECONN] = DefaultHttpBigCache
-	DefaultAllHandler.handlers.Store(CHANCONN, DefaultEventBus)
-	//DefaultAllHandler.handlers[CHANCONN] = DefaultEventBus
+	DefaultGinSenderMap.ginSenders.Store(CACHECONN, DefaultHttpBigCache)
+	//DefaultGinSenderMap.ginSenders[CACHECONN] = DefaultHttpBigCache
+	DefaultGinSenderMap.ginSenders.Store(CHANCONN, DefaultEventBus)
+	//DefaultGinSenderMap.ginSenders[CHANCONN] = DefaultEventBus
 }

@@ -26,7 +26,7 @@ type TcpConn struct {
 	headRecvBuf []byte
 }
 
-func newTcpConn(opts ...Option) (Messager, error) {
+func newTcpConn(opts ...Option) (Communicator, error) {
 	o := newOptions(opts...)
 	//dur := time.Tick(time.Second * time.Duration(o.TimeOut))
 	//可以手动停止任务

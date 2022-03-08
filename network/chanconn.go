@@ -101,8 +101,8 @@ func NewEventBus(timeout int) *EventBus {
 	}
 }
 
-func (e *EventBus) HandleMessageGin(c *gin.Context) {
-	var req RequestForSend
+func (e *EventBus) WriteMessageGin(c *gin.Context) {
+	var req requestForSend
 	err := c.BindJSON(&req)
 	if err != nil {
 		DeLog.Infof(INFOPREFIX+"SaveData BindJson error:%v", err)
@@ -124,7 +124,7 @@ func (e *EventBus) HandleMessageGin(c *gin.Context) {
 	//})
 }
 
-func (e *EventBus) HandleMessage(req RequestForSend) {
+func (e *EventBus) WriteMessage(req requestForSend) {
 	topic := req.RemoteNid + "_" + req.Uid
 	err := e.Publish(DataEvent{Topic: topic, Key: req.Key, Data: req.Data})
 	if err != nil {
@@ -149,7 +149,7 @@ type ChanConn struct {
 	timeout    time.Duration
 }
 
-func newChanConn(opts ...Option) (Messager, error) {
+func newChanConn(opts ...Option) (Communicator, error) {
 	o := newOptions(opts...)
 	topic := o.RemoteNid + "_" + o.Uid
 	//关键,订阅
@@ -167,7 +167,7 @@ func newChanConn(opts ...Option) (Messager, error) {
 }
 
 func (c *ChanConn) SendData(key string, val []byte) (int, error) {
-	req := RequestForSend{
+	req := requestForSend{
 		NetworkType: c.o.NetworkType,
 		RemoteNid:   c.o.LocalNid,
 		Uid:         c.o.Uid,

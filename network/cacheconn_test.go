@@ -27,7 +27,7 @@ func newMockHttpServer(sec int) *mockHttpServer {
 }
 
 func (h *mockHttpServer) addPath(relativePath string) {
-	h.engine.POST(relativePath, h.httpBigCache.HandleMessageGin)
+	h.engine.POST(relativePath, h.httpBigCache.WriteMessageGin)
 }
 
 //func (s *mockServer) saveData(c *gin.Context) {

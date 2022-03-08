@@ -108,7 +108,7 @@ func newMockChanServer(timeout int) *mockChanServer {
 	}
 }
 func (s *mockChanServer) addPath(relativePath string) {
-	s.r.POST(relativePath, s.eventBus.HandleMessageGin)
+	s.r.POST(relativePath, s.eventBus.WriteMessageGin)
 }
 
 func TestEventBus_EventBusHandlerFunc(t *testing.T) {

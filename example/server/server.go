@@ -37,7 +37,7 @@ type Req struct {
 	//Host string
 }
 type Server struct {
-	AllHand      *network.AllHandler
+	AllHand      *network.GinSenderMap
 	HttpBigcache *network.HttpBigCache
 	Eventbus     *network.EventBus
 	Addr         string
@@ -53,7 +53,7 @@ func NewServer(addr, networkType string) (*Server, error) {
 	httpBigCache := network.DefaultHttpBigCache
 	//Eventbus := network.DefaultEventBus
 	Eventbus := network.NewEventBus(3600)
-	allHander := network.NewAllHandler(3600)
+	allHander := network.NewGinSenderMap(3600)
 	httpBigCache = allHander.GetHttpBigCache()
 	Eventbus = allHander.GetEventBus()
 	return &Server{
@@ -97,8 +97,8 @@ func GenRandDataDebug(seed int, datasetNum int, dataSrcLen int) ([]byte, []int) 
 	}
 	return dataSrc, offList
 }
-func connHandle(req Req, httpBigCache *network.HttpBigCache, eventBus *network.EventBus) (network.Messager, error) {
-	msgHandle, err := network.NewMessager(
+func connHandle(req Req, httpBigCache *network.HttpBigCache, eventBus *network.EventBus) (network.Communicator, error) {
+	msgHandle, err := network.NewCommunicator(
 		req.NetworkType,
 		network.Ip(req.Ip),
 		network.Port(req.Port),
@@ -157,7 +157,7 @@ func (s *Server) StartTask(c *gin.Context) {
 			network.DeLog.Infof("[%v]RecvData,key:%v,data:%v,net:%v", req.LocalNid, key, string(data), req.NetworkType)
 		}
 	case HOST:
-		//msgHandle, err := network.NewMessager(
+		//msgHandle, err := network.NewCommunicator(
 		//	req.NetworkType,
 		//	network.BigCache(s.HttpBigcache),
 		//	network.SendUrl(req.SendUrl),
@@ -205,7 +205,7 @@ func (s *Server) Route() {
 	v1Grp := router.Group("/v1")
 	//v1Grp.POST("/send", s.HttpBigcache.HandleMessageGin)
 	//v1Grp.POST("/send", s.Eventbus.HandleMessageGin)
-	v1Grp.POST("/send", s.AllHand.SendHandlerFunc)
+	v1Grp.POST("/send", s.AllHand.GinSenderHandlerFunc)
 	v1Grp.POST("/algo/start", s.StartTask)
 	if err := router.Run(s.Addr); err != nil {
 		network.DeLog.Infof(network.INFOPREFIX + "server run error")

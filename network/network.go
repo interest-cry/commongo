@@ -2,8 +2,8 @@ package network
 
 import "errors"
 
-//消息发送接口
-type Messager interface {
+//消息发送、接收接口
+type Communicator interface {
 	SendData(key string, val []byte) (int, error)
 	RecvData(key string) ([]byte, error)
 	Close() error
@@ -17,10 +17,10 @@ const (
 	CHANCONN  = "CHANCONN"
 )
 
-type newConnFunc func(opts ...Option) (Messager, error)
+type newConnFunc func(opts ...Option) (Communicator, error)
 
 var NetworkRegister []string = []string{TCPCONN, CACHECONN, CHANCONN}
-var NetworkConnRegister map[string]newConnFunc = map[string]newConnFunc{
+var CommunicatorRegister map[string]newConnFunc = map[string]newConnFunc{
 	CHANCONN:  newChanConn,
 	CACHECONN: newCacheConn,
 	TCPCONN:   newTcpConn,
@@ -32,11 +32,11 @@ var NetworkMap map[string]string = map[string]string{
 	"chan":  CHANCONN,
 }
 
-func NewMessager(netWorkType string, opts ...Option) (Messager, error) {
+func NewCommunicator(netWorkType string, opts ...Option) (Communicator, error) {
 	//o := newOptions(opts...)
 	opts = append(opts, NetworkType(netWorkType))
 	DeLog.Infof(INFOPREFIX+"netWorkType:%v", netWorkType)
-	connFunc, ok := NetworkConnRegister[netWorkType]
+	connFunc, ok := CommunicatorRegister[netWorkType]
 	if !ok {
 		return nil, errors.New("error:not in NetworkConnRegister")
 	}
